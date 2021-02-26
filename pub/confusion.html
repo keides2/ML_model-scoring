@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>順位と混合行列をグラフ化</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- AJAX API のロード -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        // Visualization API と折れ線グラフ用のパッケージのロード
+        google.charts.load('current', {'packages':['corechart']});
+    
+        // Google Visualization API ロード時のコールバック関数の設定
+        google.charts.setOnLoadCallback(drawChart_rank);
+        google.charts.setOnLoadCallback(drawChart_accuracy);
+        google.charts.setOnLoadCallback(drawChart_precision);
+        google.charts.setOnLoadCallback(drawChart_recall);
+        google.charts.setOnLoadCallback(drawChart_f1);
+
+        var ma_rank = new Array();
+        var ma_acc = new Array();
+        var ma_pre = new Array();
+        var ma_rec = new Array();
+        var ma_f1 = new Array();
+        var data = new Array();
+        var res = new Array();
+
+        // 1) CSVファイルを読み込む. onload 時実行
+        function getValue(){
+            /*-- 順位 -------------------------------------------------------------------------------------------- */
+            var fname = 'data/rank_accuracy.csv';   // 正解率による順位
+            console.log(fname);
+
+            // 2) 該当 csvファイルから chartデータに変換
+            ma_rank = getCsv(fname);
+            console.log(ma_f1);
+
+            /*-- 正解率 -------------------------------------------------------------------------------------------- */
+            var fname = 'data/accuracy.csv';
+            console.log(fname);
+
+            // 2) 該当 csvファイルから chartデータに変換
+            ma_acc = getCsv(fname);
+            console.log(ma_acc);
+
+            /*-- 適合率 -------------------------------------------------------------------------------------------- */
+            var fname = 'data/precision.csv';
+            console.log(fname);
+
+            // 2) 該当 csvファイルから chartデータに変換
+            ma_pre = getCsv(fname);
+            console.log(ma_pre);
+
+            /*-- 再現率 -------------------------------------------------------------------------------------------- */
+            var fname = 'data/recall.csv';
+            console.log(fname);
+
+            // 2) 該当 csvファイルから chartデータに変換
+            ma_rec = getCsv(fname);
+            console.log(ma_rec);
+
+            /*-- F1 ----------------------------------------------------------------------------------------------- */
+            var fname = 'data/f1.csv';
+            console.log(fname);
+
+            // 2) 該当 csvファイルから chartデータに変換
+            ma_f1 = getCsv(fname);
+            console.log(ma_f1);
+
+        };
+  
+        // 2) csvファイルをchartデータに整形
+        function getCsv(url){
+            var req = new XMLHttpRequest();         // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成
+            req.open('get', url, false);            // アクセスするファイルを指定
+            req.send(null);                         // HTTPリクエストの発行
+
+            // 改行ごとに配列化
+            var arr = req.responseText.split('\n');
+
+            // 1次元配列を2次元配列に変換
+            res = [];
+            res[0] = arr[0].split(',');
+            for(var i = 1; i < arr.length; i++){
+                // 空白行が出てきた時点で終了
+                if(arr[i] == '') break;
+                // ","ごとに配列化
+                res[i] = arr[i].split(',');
+                for(var i2 = 1; i2 < res[i].length; i2++){
+                    // 数字の場合は「' "」を削除 ･･･ 2列目以降に適用
+                    if(res[i][i2].match(/\-?\d+(.\d+)?(e[\+\-]d+)?/)){
+                        res[i][i2] = parseFloat(res[i][i2].replace(/'?"?/g, ""));
+                    }
+                }
+            }
+            return res;
+        }
+
+        // google.chartsでグラフを表示
+        // 3) ma_rank 順位
+        function drawChart_rank() {
+            // データテーブルの作成
+            data = google.visualization.arrayToDataTable( ma_rank );
+
+            // グラフのオプションを設定
+            var options = {
+                title : '順位（正解率）',
+                titleTextStyle : { color: '#333', fontSize: 20 },
+                vAxis: {
+                    title: '順位',
+                    direction: -1,
+                    minValue: 1,
+                    maxValue: 3,
+                    ticks: [1,2,3],
+                    viewWindow: {
+                        min: 1
+                    }
+                },
+                hAxis: {title: ma_rank[0][0]},
+                seriesType: 'line',             // 全体は棒グラフ(default='line')
+                legendTextStyle : { color: '#333', fontSize: 12 },
+            };
+            // 折れ線グラフ： LineChart のオブジェクトの作成
+            var chart = new google.visualization.LineChart(document.getElementById('chart_rank'));
+            // // データテーブルとオプションを渡してグラフを描画
+            chart.draw(data, options);
+        };
+
+        // 3) ma_acc 正解率
+        function drawChart_accuracy() {
+            // データテーブルの作成
+            data = google.visualization.arrayToDataTable( ma_acc );
+
+            // グラフのオプションを設定
+            var options = {
+                title : '正解率 Accuracy',
+                titleTextStyle : { color: '#333', fontSize: 20 },
+                vAxis: {title: '正解率 [%]'},
+                hAxis: {title: ma_acc[0][0]},
+                seriesType: 'line',             // 全体は棒グラフ(default='line')
+                legendTextStyle : { color: '#333', fontSize: 12 },
+            };
+            // 折れ線グラフ： LineChart のオブジェクトの作成
+            var chart = new google.visualization.LineChart(document.getElementById('chart_accuracy'));
+            // // データテーブルとオプションを渡してグラフを描画
+            chart.draw(data, options);
+        };
+
+        // 3) ma_pre 適合率
+        function drawChart_precision() {
+            // データテーブルの作成
+            data = google.visualization.arrayToDataTable( ma_pre );
+
+            // グラフのオプションを設定
+            var options = {
+                title : '適合率 Precision',
+                titleTextStyle : { color: '#333', fontSize: 20 },
+                vAxis: {title: '適合率 [%]'},
+                hAxis: {title: ma_pre[0][0]},
+                seriesType: 'line',             // 全体は棒グラフ(default='line')
+                legendTextStyle : { color: '#333', fontSize: 12 },
+            };
+            // 折れ線グラフ： LineChart のオブジェクトの作成
+            var chart = new google.visualization.LineChart(document.getElementById('chart_precision'));
+            // // データテーブルとオプションを渡してグラフを描画
+            chart.draw(data, options);
+        };
+
+        // 3) ma_rec 再現率
+        function drawChart_recall() {
+            // データテーブルの作成
+            data = google.visualization.arrayToDataTable( ma_rec );
+
+            // グラフのオプションを設定
+            var options = {
+                title : '再現率 Recall',
+                titleTextStyle : { color: '#333', fontSize: 20 },
+                vAxis: {title: '再現率 [%]'},
+                hAxis: {title: ma_rec[0][0]},
+                seriesType: 'line',             // 全体は棒グラフ(default='line')
+                legendTextStyle : { color: '#333', fontSize: 12 },
+            };
+            // 折れ線グラフ： LineChart のオブジェクトの作成
+            var chart = new google.visualization.LineChart(document.getElementById('chart_recall'));
+            // // データテーブルとオプションを渡してグラフを描画
+            chart.draw(data, options);
+        };
+
+        // 3) ma_f1 F1
+        function drawChart_f1() {
+            // データテーブルの作成
+            data = google.visualization.arrayToDataTable( ma_f1 );
+
+            // グラフのオプションを設定
+            var options = {
+                title : 'F1',
+                titleTextStyle : { color: '#333', fontSize: 20 },
+                vAxis: {title: 'F1 [%]'},
+                hAxis: {title: ma_f1[0][0]},
+                seriesType: 'line',             // 全体は棒グラフ(default='line')
+                legendTextStyle : { color: '#333', fontSize: 12 },
+            };
+            // 折れ線グラフ： LineChart のオブジェクトの作成
+            var chart = new google.visualization.LineChart(document.getElementById('chart_f1'));
+            // // データテーブルとオプションを渡してグラフを描画
+            chart.draw(data, options);
+        };
+
+</script>
+
+</head>
+<body onload="getValue();">
+    <!-- グラフを描く div 要素 -->
+    <div class="waku1">
+        <h3>正解率による順位と混合行列</h3>
+        <div id="chart_rank" style="width: 100%; height: 350px"></div>
+        <div id="chart_accuracy" style="width: 100%; height: 350px"></div>
+        <div id="chart_precision" style="width: 100%; height: 350px"></div>
+        <div id="chart_recall" style="width: 100%; height: 350px"></div>
+        <div id="chart_f1" style="width: 100%; height: 350px"></div>
+    </div>
+</body>
+</html>
